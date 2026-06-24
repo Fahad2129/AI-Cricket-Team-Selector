@@ -1,0 +1,606 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: PSL AI Cricket Team Recommendation API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: cricket
+    description: Cricket player recommendation and stats
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /cricket/venues:
+    get:
+      operationId: getVenues
+      tags: [cricket]
+      summary: Get available PSL venues
+      responses:
+        "200":
+          description: List of venues
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenuesResponse"
+
+  /cricket/players:
+    get:
+      operationId: getPlayers
+      tags: [cricket]
+      summary: Get all players with AI scores
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+        - name: venue
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Player list with AI scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayersResponse"
+
+  /cricket/recommend:
+    post:
+      operationId: recommendTeam
+      tags: [cricket]
+      summary: Get AI-recommended team (Genetic Algorithm optimizer)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendRequest"
+      responses:
+        "200":
+          description: Recommended team with AI scores
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendResponse"
+
+  /cricket/player/{name}:
+    get:
+      operationId: getPlayerDetail
+      tags: [cricket]
+      summary: Get detailed player stats
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Player detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayerDetail"
+
+  /cricket/stats/summary:
+    get:
+      operationId: getStatsSummary
+      tags: [cricket]
+      summary: Get dataset summary stats
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsSummary"
+
+  /cricket/stats/full:
+    get:
+      operationId: getFullStats
+      tags: [cricket]
+      summary: Get full career stats for all players (for statistics page)
+      responses:
+        "200":
+          description: Full career stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FullStatsResponse"
+
+  /cricket/top-performers:
+    get:
+      operationId: getTopPerformers
+      tags: [cricket]
+      summary: Get top performers by role (sorted by role-specific score)
+      parameters:
+        - name: venue
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Top performers by role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopPerformersResponse"
+
+  /cricket/alternatives:
+    get:
+      operationId: getAlternatives
+      tags: [cricket]
+      summary: Get alternative players for a specific position slot
+      parameters:
+        - name: position
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Team role (Opener, Middle Order, All-Rounder, Fast Bowler, Spin Bowler, Wicketkeeper)
+        - name: venue
+          in: query
+          schema:
+            type: string
+        - name: exclude
+          in: query
+          schema:
+            type: string
+          description: Comma-separated player names to exclude (current team)
+      responses:
+        "200":
+          description: Alternative players for the position
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlternativesResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    VenuesResponse:
+      type: object
+      properties:
+        venues:
+          type: array
+          items:
+            $ref: "#/components/schemas/Venue"
+      required: [venues]
+
+    Venue:
+      type: object
+      properties:
+        name:
+          type: string
+        shortName:
+          type: string
+        matchCount:
+          type: number
+        city:
+          type: string
+      required: [name, shortName, matchCount, city]
+
+    PlayersResponse:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        total:
+          type: number
+      required: [players, total]
+
+    Player:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bowlingType:
+          type: string
+        impactScore:
+          type: number
+        bayesianScore:
+          type: number
+        finalScore:
+          type: number
+        roleScore:
+          type: number
+        cluster:
+          type: string
+        clusterLabel:
+          type: string
+        battingAvg:
+          type: number
+        strikeRate:
+          type: number
+        recentForm:
+          type: number
+        wicketsPerMatch:
+          type: number
+        economy:
+          type: number
+        matches:
+          type: number
+        venueScore:
+          type: number
+        performanceClass:
+          type: string
+        venueBattingAvg:
+          type: number
+        venueStrikeRate:
+          type: number
+        venueBowlingAvg:
+          type: number
+        venueBowlingSR:
+          type: number
+        venueWickets:
+          type: number
+        venueEconomy:
+          type: number
+      required: [name, role, impactScore, bayesianScore, finalScore, roleScore, cluster, clusterLabel, matches, performanceClass]
+
+    RecommendRequest:
+      type: object
+      properties:
+        venue:
+          type: string
+        opposition:
+          type: string
+      required: [venue]
+
+    RecommendResponse:
+      type: object
+      properties:
+        team:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamPlayer"
+        venue:
+          type: string
+        opposition:
+          type: string
+        teamBalance:
+          $ref: "#/components/schemas/TeamBalance"
+        modelInfo:
+          $ref: "#/components/schemas/ModelInfo"
+      required: [team, venue, teamBalance, modelInfo]
+
+    TeamPlayer:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bowlingType:
+          type: string
+        teamRole:
+          type: string
+        impactScore:
+          type: number
+        bayesianScore:
+          type: number
+        finalScore:
+          type: number
+        roleScore:
+          type: number
+        cluster:
+          type: string
+        clusterLabel:
+          type: string
+        battingAvg:
+          type: number
+        strikeRate:
+          type: number
+        wicketsPerMatch:
+          type: number
+        economy:
+          type: number
+        matches:
+          type: number
+        venueScore:
+          type: number
+        performanceClass:
+          type: string
+        selectionReason:
+          type: string
+        venueBattingAvg:
+          type: number
+        venueStrikeRate:
+          type: number
+        venueBowlingAvg:
+          type: number
+        venueBowlingSR:
+          type: number
+        venueWickets:
+          type: number
+        venueEconomy:
+          type: number
+      required: [name, role, teamRole, impactScore, finalScore, selectionReason, matches]
+
+    TeamBalance:
+      type: object
+      properties:
+        batsmen:
+          type: number
+        allRounders:
+          type: number
+        fastBowlers:
+          type: number
+        spinBowlers:
+          type: number
+        wicketkeeper:
+          type: number
+      required: [batsmen, allRounders, fastBowlers, spinBowlers, wicketkeeper]
+
+    ModelInfo:
+      type: object
+      properties:
+        regressionR2:
+          type: number
+        clusterCount:
+          type: number
+        totalPlayersAnalyzed:
+          type: number
+        venueMatchesUsed:
+          type: number
+        weights:
+          $ref: "#/components/schemas/Weights"
+      required: [regressionR2, clusterCount, totalPlayersAnalyzed, weights]
+
+    Weights:
+      type: object
+      properties:
+        impactScore:
+          type: number
+        bayesianScore:
+          type: number
+        venueScore:
+          type: number
+      required: [impactScore, bayesianScore, venueScore]
+
+    PlayerDetail:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bowlingType:
+          type: string
+        impactScore:
+          type: number
+        bayesianScore:
+          type: number
+        finalScore:
+          type: number
+        roleScore:
+          type: number
+        cluster:
+          type: string
+        clusterLabel:
+          type: string
+        battingAvg:
+          type: number
+        strikeRate:
+          type: number
+        recentForm:
+          type: number
+        wicketsPerMatch:
+          type: number
+        economy:
+          type: number
+        matches:
+          type: number
+        venueBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/VenueStat"
+        performanceClass:
+          type: string
+        matchHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/MatchStat"
+      required: [name, role, impactScore, finalScore, matches]
+
+    VenueStat:
+      type: object
+      properties:
+        venue:
+          type: string
+        matches:
+          type: number
+        battingAvg:
+          type: number
+        strikeRate:
+          type: number
+        wickets:
+          type: number
+        economy:
+          type: number
+      required: [venue, matches]
+
+    MatchStat:
+      type: object
+      properties:
+        date:
+          type: string
+        venue:
+          type: string
+        opposition:
+          type: string
+        runs:
+          type: number
+        wickets:
+          type: number
+        economy:
+          type: number
+        strikeRate:
+          type: number
+      required: [date, venue, opposition]
+
+    StatsSummary:
+      type: object
+      properties:
+        totalPlayers:
+          type: number
+        totalMatches:
+          type: number
+        totalRecords:
+          type: number
+        venueCount:
+          type: number
+        clusters:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClusterSummary"
+        modelAccuracy:
+          $ref: "#/components/schemas/ModelAccuracy"
+      required: [totalPlayers, totalMatches, totalRecords, venueCount, clusters, modelAccuracy]
+
+    ClusterSummary:
+      type: object
+      properties:
+        cluster:
+          type: number
+        label:
+          type: string
+        count:
+          type: number
+        avgImpactScore:
+          type: number
+      required: [cluster, label, count, avgImpactScore]
+
+    ModelAccuracy:
+      type: object
+      properties:
+        regressionR2:
+          type: number
+        classifierAccuracy:
+          type: number
+        clusterSilhouette:
+          type: number
+      required: [regressionR2, classifierAccuracy, clusterSilhouette]
+
+    TopPerformersResponse:
+      type: object
+      properties:
+        batsmen:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        allRounders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        fastBowlers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        spinBowlers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        wicketkeepers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+        venue:
+          type: string
+      required: [batsmen, allRounders, fastBowlers, spinBowlers, wicketkeepers]
+
+    AlternativesResponse:
+      type: object
+      properties:
+        alternatives:
+          type: array
+          items:
+            $ref: "#/components/schemas/TeamPlayer"
+        position:
+          type: string
+        venue:
+          type: string
+      required: [alternatives, position, venue]
+
+    FullStatsResponse:
+      type: object
+      properties:
+        players:
+          type: array
+          items:
+            $ref: "#/components/schemas/FullStatPlayer"
+        total:
+          type: number
+      required: [players, total]
+
+    FullStatPlayer:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        bowlingType:
+          type: string
+        matches:
+          type: number
+        totalRuns:
+          type: number
+        totalWickets:
+          type: number
+        battingAvg:
+          type: number
+        strikeRate:
+          type: number
+        hundreds:
+          type: number
+        fifties:
+          type: number
+        ducks:
+          type: number
+        highestScore:
+          type: string
+        bowlingAvg:
+          type: number
+        economy:
+          type: number
+        bowlStrikeRate:
+          type: number
+        wicketsPerMatch:
+          type: number
+        finalScore:
+          type: number
+        roleScore:
+          type: number
+        performanceClass:
+          type: string
+        clusterLabel:
+          type: string
+      required: [name, role, matches, totalRuns, totalWickets, battingAvg, strikeRate, finalScore, roleScore, performanceClass]
