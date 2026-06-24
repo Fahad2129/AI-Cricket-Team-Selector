@@ -2,7 +2,7 @@
 
 > An AI-powered cricket team selector for the **Pakistan Super League (PSL)** — built with 5 machine learning algorithms implemented from scratch in pure Python. No ML libraries. No black boxes.
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue) ![React](https://img.shields.say/badge/React-TypeScript-61DAFB) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688) ![License](https://img.shields.io/badge/License-MIT-green)
+![Python](https://img.shields.io/badge/Python-3.11+-blue) ![React](https://img.shields.io/badge/React-TypeScript-61DAFB) ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
